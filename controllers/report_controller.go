@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,9 +48,20 @@ type ReportReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *ReportReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
+	defer utilruntime.HandleCrash()
 
-	// TODO(user): your logic here
+	// 获取report对象
+	logger.Info("get report object", "name", req.String())
+	report := &defaultv1.Report{}
+	if err := r.Get(ctx, req.NamespacedName, report); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	// 如果report在删除，则跳过
+	if report.DeletionTimestamp != nil {
+		logger.Info("report in deleting", "name", req.String())
+		return ctrl.Result{}, nil
+	}
 
 	return ctrl.Result{}, nil
 }

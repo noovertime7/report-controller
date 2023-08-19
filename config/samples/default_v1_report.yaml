@@ -2,5 +2,19 @@ apiVersion: default.report.tjkj.com/v1
 kind: Report
 metadata:
   name: report-sample
+  namespace: default
 spec:
-  # TODO(user): Add fields here
+  schedule: "* * * * *"
+  pull:
+    url: www.baidu.com
+    headers:
+      aaa: bbb
+  save:
+    type: minio
+    endpoint: "http://127.0.0.1:9000"
+    accessKey: "minioadmin"
+    accessID: "minioadmin"
+    region: "minio"
+  send:
+    type: email
+

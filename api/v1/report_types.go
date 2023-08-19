@@ -25,21 +25,43 @@ import (
 
 // ReportSpec defines the desired state of Report
 type ReportSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Report. Edit report_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Pull     Pull   `json:"pull"`
+	Schedule string `json:"schedule"`
+	Save     Save   `json:"save"`
+	Send     Send   `json:"send"`
 }
 
-// ReportStatus defines the observed state of Report
-type ReportStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+type Pull struct {
+	Url     string            `json:"url"`
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+type Save struct {
+	Type      SaveType `json:"type"`
+	Endpoint  string   `json:"endpoint"`
+	AccessKey string   `json:"accessKey"`
+	AccessID  string   `json:"accessID"`
+	Region    string   `json:"region,omitempty"`
+}
+
+type Send struct {
+	Type SendType `json:"type"`
+}
+
+type SaveType string
+
+const (
+	MinioSaveType SaveType = "minio"
+)
+
+type SendType string
+
+const (
+	Email SendType = "email"
+)
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // Report is the Schema for the reports API
 type Report struct {
@@ -48,6 +70,18 @@ type Report struct {
 
 	Spec   ReportSpec   `json:"spec,omitempty"`
 	Status ReportStatus `json:"status,omitempty"`
+}
+
+// ReportStatus defines the observed state of Report
+type ReportStatus struct {
+	// Phase defines the current operation that the backup process is taking.
+	Phase ReportPhase `json:"phase,omitempty"`
+	// StartTime is the times that this backup entered the `BackingUp' phase.
+	// +optional
+	StartTime *metav1.Time `json:"startTime,omitempty"`
+	// CompletionTime is the time that this backup entered the `Completed' phase.
+	// +optional
+	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
 }
 
 //+kubebuilder:object:root=true
