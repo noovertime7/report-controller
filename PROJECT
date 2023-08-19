@@ -1,0 +1,16 @@
+domain: report.tjkj.com
+layout:
+- go.kubebuilder.io/v3
+projectName: report-controller
+repo: github.com/noovertime7/report-controller
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: report.tjkj.com
+  group: default
+  kind: Report
+  path: github.com/noovertime7/report-controller/api/v1
+  version: v1
+version: "3"

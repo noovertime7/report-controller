@@ -1,0 +1,20 @@
+# permissions for end users to view reports.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: report-viewer-role
+rules:
+- apiGroups:
+  - default.report.tjkj.com
+  resources:
+  - reports
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - default.report.tjkj.com
+  resources:
+  - reports/status
+  verbs:
+  - get
