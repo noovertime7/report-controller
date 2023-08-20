@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"github.com/noovertime7/report-controller/pkg/task"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	defaultv1 "github.com/noovertime7/report-controller/api/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // ReportReconciler reconciles a Report object
@@ -55,12 +57,27 @@ func (r *ReportReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	logger.Info("get report object", "name", req.String())
 	report := &defaultv1.Report{}
 	if err := r.Get(ctx, req.NamespacedName, report); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		if apierrors.IsNotFound(err) {
+			logger.Info("report in deleting", "name", req.String())
+			err := task.Mgr.Stop(req.Name)
+			if err != nil {
+				logger.Error(err, "停止任务失败")
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{}, nil
+		}
+		logger.Error(err, "get report error")
+		return ctrl.Result{}, err
 	}
-	// 如果report在删除，则跳过
-	if report.DeletionTimestamp != nil {
-		logger.Info("report in deleting", "name", req.String())
-		return ctrl.Result{}, nil
+
+	reportTask := task.NewReportTask(report)
+
+	if err := task.Mgr.AddTaskWithJob(reportTask); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if err := task.Mgr.Start(reportTask.GetName()); err != nil {
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
